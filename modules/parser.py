@@ -28,10 +28,9 @@ class XParser:
                     ref_tweet = self.x_api_handler.get_tweet_by_id(ref_tweet["id"])
                     ref_tweet_data = ref_tweet.get("data", {})
 
-                    image_urls = [
-                        media_item.get("url")
-                        for media_item in ref_tweet.get("includes", {}).get("media", [])
-                    ]
+                    media = ref_tweet.get("includes", {}).get("media", [])
+
+                    image_urls = [media_item.get("url", "") for media_item in media]
 
                     self._process_tweet(
                         username,
@@ -44,18 +43,18 @@ class XParser:
                 self.tweet_id_storage.save_last_tweet_id(username, tweet["id"])
 
                 media = fetched_tweets.get("includes", {}).get("media", [])
+                media_keys = tweet.get("attachments", {}).get("media_keys", [])
 
                 image_urls = [
-                    media_item["url"]
+                    media_item.get("url", "")
                     for media_item in media
-                    if media_item["media_key"]
-                    in tweet.get("attachments", {}).get("media_keys", [])
+                    if media_item["media_key"] in media_keys
                 ]
 
                 self._process_tweet(
                     username,
                     tweet["id"],
-                    tweet.get("note_tweet", {}).get("text") or tweet["text"],
+                    tweet.get("note_tweet", {}).get("text") or tweet.get("text", ""),
                     image_urls,
                 )
 
